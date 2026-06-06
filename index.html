@@ -161,6 +161,16 @@ h1 {
 <option value="random">Random</option>
 </select>
 </div>
+<div class="ctl-group">
+<label>Weather</label>
+<select id="weather-preset" onchange="applyPreset()">
+<option value="moderate">Moderate Snow</option>
+<option value="light">Light Flurries</option>
+<option value="heavy">Heavy Snow</option>
+<option value="blizzard">Blizzard</option>
+<option value="showers">Spring Showers</option>
+</select>
+</div>
 </div>
 <div id="hint">Click to add wind · Scroll to adjust</div>
 
@@ -171,6 +181,7 @@ const countSlider = document.getElementById('count');
 const speedSlider = document.getElementById('speed');
 const windSlider = document.getElementById('wind');
 const modeSelect = document.getElementById('mode');
+const weatherPresetSelect = document.getElementById('weather-preset');
 const countVal = document.getElementById('count-val');
 const speedVal = document.getElementById('speed-val');
 const windVal = document.getElementById('wind-val');
@@ -284,6 +295,46 @@ function loop(ts) {
     update(dt);
     draw();
     requestAnimationFrame(loop);
+}
+
+// Weather presets
+const presets = {
+    light:      { count: 80,  speed: 0.5, wind: 0.2, label: 'Light Flurries' },
+    moderate:   { count: 200, speed: 1.0, wind: 0.0, label: 'Moderate Snow' },
+    heavy:      { count: 350, speed: 1.8, wind: 0.3, label: 'Heavy Snow' },
+    blizzard:   { count: 500, speed: 2.8, wind: 2.0, label: 'Blizzard' },
+    showers:    { count: 150, speed: 2.0, wind: -0.5, label: 'Spring Showers' }
+};
+
+function applyPreset() {
+    const key = weatherPresetSelect.value;
+    const preset = presets[key];
+    if (!preset) return;
+
+    targetCount = preset.count;
+    countSlider.value = preset.count;
+    countVal.textContent = preset.count;
+
+    speedMultiplier = preset.speed;
+    speedSlider.value = preset.speed;
+    speedVal.textContent = preset.speed.toFixed(1);
+
+    wind = preset.wind;
+    windSlider.value = preset.wind;
+    windVal.textContent = preset.wind.toFixed(1);
+    updateWindDisplay();
+
+    syncCount();
+    // Recolor if spring showers
+    if (key === 'showers') {
+        modeSelect.value = 'spring';
+        colorMode = 'spring';
+        for (let p of particles) { p.color = randomColor(colorMode); }
+    } else if (key === 'blizzard') {
+        modeSelect.value = 'winter';
+        colorMode = 'winter';
+        for (let p of particles) { p.color = randomColor(colorMode); }
+    }
 }
 
 // Controls
